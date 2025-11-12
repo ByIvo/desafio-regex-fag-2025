@@ -13,7 +13,6 @@
     display: flex;
     flex-direction: column;
   }
-
   .container {
     display: flex;
     flex-direction: column;
@@ -24,16 +23,13 @@
     box-sizing: border-box;
     gap: 0.8rem;
   }
-
   h1 { font-size: 1.4rem; margin: 0; color: #60a5fa; }
   h2 { font-size: 1.1rem; margin: 0.3rem 0 0.2rem; }
-
   label {
     font-size: 0.9rem;
     color: #9aa4b2;
     margin-top: 0.6rem;
   }
-
   input, textarea, button {
     width: 100%;
     box-sizing: border-box;
@@ -41,18 +37,15 @@
     font-size: 1rem;
     border-radius: 6px;
   }
-
   input, textarea {
     background: #1a2333;
     border: 1px solid #333;
     color: #fff;
     padding: 0.5rem;
   }
-
   textarea[disabled] {
     opacity: 0.85;
   }
-
   button {
     padding: 0.7rem;
     border: none;
@@ -62,52 +55,42 @@
     font-weight: 600;
     cursor: pointer;
   }
-
   button[disabled] {
     opacity: 0.4;
     cursor: default;
   }
-
   .descricao {
     background: #1a1f33;
     padding: 0.6rem;
     border-radius: 6px;
     font-size: 0.9rem;
   }
-
   .grid {
     flex: 1;
     display: flex;
     gap: 1rem;
     min-height: 0;
   }
-
   .col {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
-
   .col textarea {
     flex: 1;
     resize: none;
   }
-
   #status {
     font-size: 0.9rem;
     margin-top: 0.4rem;
   }
-
   .erro { color: #fb7185; }
   .ok { color: #34d399; }
   .normal { color: #9aa4b2; }
-
   @media (max-width: 700px) {
     .grid { flex-direction: column; }
   }
-
-  /* Popup */
   .popup-overlay {
     position: fixed;
     inset: 0;
@@ -117,7 +100,6 @@
     justify-content: center;
     z-index: 1000;
   }
-
   .popup {
     background: #1a2333;
     padding: 2rem;
@@ -126,19 +108,16 @@
     text-align: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
   }
-
   .popup h1 {
     color: #60a5fa;
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
   }
-
   .popup p {
     color: #dbeafe;
     font-size: 1rem;
     line-height: 1.5;
   }
-
   .popup button {
     background: #34d399;
     color: #012;
@@ -147,7 +126,6 @@
   }
 </style>
 
-<!-- Popup inicial -->
 <div class="popup-overlay" id="popup">
   <div class="popup">
     <h1>🏆 Desafio Regex — DevPR Edition</h1>
@@ -160,7 +138,6 @@
   </div>
 </div>
 
-<!-- Popup final (aparece ao terminar todos os desafios) -->
 <div class="popup-overlay" id="popupFinal" style="display:none;">
   <div class="popup">
     <h1>🎉 Parabéns!</h1>
@@ -194,7 +171,6 @@
 </div>
 
 <script>
-/* ====== DESAFIOS DEVPR ====== */
 const desafios = [
   {
     titulo:"Desafio 1 — Datas de eventos DevPR",
@@ -214,12 +190,13 @@ Retrospectiva - 2024-12-31`,
     texto:`Contatos:
 ivo@devpr.org
 ana.devpr2024@gmail.com
-contato@DEVPR.ORG
+comunidade@DEVPR.ORG
 evento.devpr@outlook
 devpr@com
-carla.2025@DevPR.org
+everton.2025@DevPR.org
+dani@devpr.org
 marcelo@empresa.com.br`,
-    esperado:["ivo@devpr.org","ana.devpr2024@gmail.com","contato@DEVPR.ORG","carla.2025@DevPR.org","marcelo@empresa.com.br"]
+    esperado:["ivo@devpr.org","comunidade@DEVPR.ORG","everton.2025@DevPR.org","dani@devpr.org"]
   },
   {
     titulo:"Desafio 3 — Valores com vírgula em inscrições",
@@ -252,7 +229,6 @@ Outro: 12345678900`,
   }
 ];
 
-/* ====== LÓGICA ====== */
 let etapa = 0;
 const pat = document.getElementById('pattern'),
       sample = document.getElementById('sample'),
@@ -281,7 +257,9 @@ function extrair(padrao,texto){
   try{
     const re = padrao.startsWith('/') ? new Function(`return ${padrao}`)() : new RegExp(padrao,'gi');
     const out = [];
-    for(const m of texto.matchAll(re)) out.push(m[1]??m[0]);
+    for (const m of texto.matchAll(re)) {
+      out.push(m[0]);
+    }
     return out;
   }catch{
     throw new Error("regex inválida");
@@ -318,12 +296,10 @@ next.onclick = () => {
     etapa++;
     carregar();
   } else {
-    // Mostra popup final que não pode ser fechada
     document.getElementById("popupFinal").style.display = "flex";
   }
 };
 
-/* ====== POPUP INICIAL ====== */
 const popup = document.getElementById('popup');
 const startBtn = document.getElementById('startGame');
 startBtn.onclick = () => {
