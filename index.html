@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jogo Regex — DevPR Edition</title>
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #0f1724;
+    color: #e6eef6;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1rem;
+    max-width: 900px;
+    margin: auto;
+    box-sizing: border-box;
+    gap: 0.8rem;
+  }
+
+  h1 { font-size: 1.4rem; margin: 0; color: #60a5fa; }
+  h2 { font-size: 1.1rem; margin: 0.3rem 0 0.2rem; }
+
+  label {
+    font-size: 0.9rem;
+    color: #9aa4b2;
+    margin-top: 0.6rem;
+  }
+
+  input, textarea, button {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: monospace;
+    font-size: 1rem;
+    border-radius: 6px;
+  }
+
+  input, textarea {
+    background: #1a2333;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 0.5rem;
+  }
+
+  textarea[disabled] {
+    opacity: 0.85;
+  }
+
+  button {
+    padding: 0.7rem;
+    border: none;
+    border-radius: 6px;
+    background: #60a5fa;
+    color: #02203a;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button[disabled] {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .descricao {
+    background: #1a1f33;
+    padding: 0.6rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+
+  .grid {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    min-height: 0;
+  }
+
+  .col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .col textarea {
+    flex: 1;
+    resize: none;
+  }
+
+  #status {
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .erro { color: #fb7185; }
+  .ok { color: #34d399; }
+  .normal { color: #9aa4b2; }
+
+  @media (max-width: 700px) {
+    .grid { flex-direction: column; }
+  }
+
+  /* Popup */
+  .popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .popup {
+    background: #1a2333;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  }
+
+  .popup h1 {
+    color: #60a5fa;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .popup p {
+    color: #dbeafe;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .popup button {
+    background: #34d399;
+    color: #012;
+    font-weight: bold;
+    margin-top: 1rem;
+  }
+</style>
+
+<!-- Popup inicial -->
+<div class="popup-overlay" id="popup">
+  <div class="popup">
+    <h1>🏆 Desafio Regex — DevPR Edition</h1>
+    <p>Bem-vindo ao jogo oficial de expressões regulares do <strong>DevParaná</strong>! 🌎<br><br>
+    Aqui você vai testar seus conhecimentos sobre o que vimos na palestra<br><br>
+    Leia o desafio, escreva seu padrão e veja o que casa — tudo em tempo real.<br><br>
+    <strong>A primeira pessoa a mostrar a tela de sucesso ganha uma camiseta!</strong>
+    </p>
+    <button id="startGame">Começar!</button>
+  </div>
+</div>
+
+<!-- Popup final (aparece ao terminar todos os desafios) -->
+<div class="popup-overlay" id="popupFinal" style="display:none;">
+  <div class="popup">
+    <h1>🎉 Parabéns!</h1>
+    <p>Você completou todos os desafios do DevPR! 👏<br><br>
+    Mostre para o organizador para ganhar sua <strong>camiseta da comunidade</strong>! 🧢<br><br>
+    <em>Regex é poder. Continue praticando 💪</em></p>
+  </div>
+</div>
+
+<div class="container" id="game" style="display:none">
+  <h1>Jogo de Expressões Regulares — DevPR</h1>
+  <h2 id="titulo"></h2>
+  <div id="descricao" class="descricao"></div>
+
+  <label>Padrão regex</label>
+  <input id="pattern" placeholder="ex: (\\d{4})-(\\d{2})">
+
+  <div class="grid">
+    <div class="col">
+      <label>Texto de exemplo</label>
+      <textarea id="sample" disabled></textarea>
+    </div>
+    <div class="col">
+      <label>Casou com</label>
+      <textarea id="matches" disabled></textarea>
+    </div>
+  </div>
+
+  <button id="next" disabled>Continuar</button>
+  <p id="status" class="normal"></p>
+</div>
+
+<script>
+/* ====== DESAFIOS DEVPR ====== */
+const desafios = [
+  {
+    titulo:"Desafio 1 — Datas de eventos DevPR",
+    descricao:"Encontre todas as datas no formato YYYY-MM-DD nos textos do calendário da comunidade.",
+    texto:`Eventos confirmados:
+DevPR Conf - 2024-10-12
+Coding Dojo - 2025-03-08
+Meetup de Java - 2025/04/15 (formato incorreto)
+Hackathon 2025-11-05
+Mentoria DevPR - 11-12-2025 (formato errado)
+Retrospectiva - 2024-12-31`,
+    esperado:["2024-10-12","2025-03-08","2025-11-05","2024-12-31"]
+  },
+  {
+    titulo:"Desafio 2 — Emails de organizadores",
+    descricao:"Capture apenas os endereços de e-mail válidos da organização DevPR.",
+    texto:`Contatos:
+ivo@devpr.org
+ana.devpr2024@gmail.com
+contato@DEVPR.ORG
+evento.devpr@outlook
+devpr@com
+carla.2025@DevPR.org
+marcelo@empresa.com.br`,
+    esperado:["ivo@devpr.org","ana.devpr2024@gmail.com","contato@DEVPR.ORG","carla.2025@DevPR.org","marcelo@empresa.com.br"]
+  },
+  {
+    titulo:"Desafio 3 — Valores com vírgula em inscrições",
+    descricao:"Encontre apenas os valores monetários com vírgula.",
+    texto:`Inscrições:
+Plano básico: 50,00
+Plano premium: 120.00
+Camiseta DevPR: 45,90
+Desconto especial: 0,5
+Taxa adicional: 10,00
+Erro de digitação: R$10.00`,
+    esperado:["50,00","45,90","0,5","10,00"]
+  },
+  {
+    titulo: "Desafio 4 — Palavras começando com 'D' ou 'd'",
+    descricao: "Encontre as palavras que começam com a letra 'd' ou 'D' na frase abaixo.",
+    texto: `Durante o DevParaná, vários desenvolvedores discutiram dados e deploy.`,
+    esperado: ["Durante", "DevParaná", "desenvolvedores", "discutiram", "dados", "deploy"]
+  },
+  {
+    titulo:"Desafio 5 — CPF dos inscritos (formato padrão)",
+    descricao:"Extraia apenas os CPFs válidos no formato XXX.XXX.XXX-XX.",
+    texto:`Inscritos:
+Ivo - 123.456.789-00
+Ana - 111.222.333-44
+Lucas - 999.888.777-66
+Erro: 00011122233
+Outro: 12345678900`,
+    esperado:["123.456.789-00","111.222.333-44","999.888.777-66"]
+  }
+];
+
+/* ====== LÓGICA ====== */
+let etapa = 0;
+const pat = document.getElementById('pattern'),
+      sample = document.getElementById('sample'),
+      matches = document.getElementById('matches'),
+      next = document.getElementById('next'),
+      status = document.getElementById('status'),
+      titulo = document.getElementById('titulo'),
+      desc = document.getElementById('descricao');
+
+function carregar(){
+  const d = desafios[etapa];
+  titulo.textContent = d.titulo;
+  desc.textContent = d.descricao;
+  sample.value = d.texto;
+  matches.value = "";
+  pat.value = "";
+  next.disabled = true;
+  status.textContent = `Desafio ${etapa+1} de ${desafios.length}`;
+  status.className = "normal";
+}
+
+function comparar(a,b){return a.length===b.length&&a.every((v,i)=>v===b[i]);}
+
+function extrair(padrao,texto){
+  if(!padrao.trim()) return [];
+  try{
+    const re = padrao.startsWith('/') ? new Function(`return ${padrao}`)() : new RegExp(padrao,'gi');
+    const out = [];
+    for(const m of texto.matchAll(re)) out.push(m[1]??m[0]);
+    return out;
+  }catch{
+    throw new Error("regex inválida");
+  }
+}
+
+function atualizar(){
+  matches.value="";
+  const p = pat.value;
+  if(!p){
+    status.textContent=`Desafio ${etapa+1} de ${desafios.length}`;
+    status.className="normal";
+    return;
+  }
+  try{
+    const achados = extrair(p,sample.value);
+    matches.value = achados.join("\n");
+    const ok = comparar(achados,desafios[etapa].esperado);
+    next.disabled = !ok;
+    status.className = ok ? "ok" : "normal";
+    status.textContent = ok ? "✅ Padrão correto!" : `Desafio ${etapa+1} de ${desafios.length}`;
+  }catch{
+    matches.value="";
+    status.textContent="⚠️ Erro na regex";
+    status.className="erro";
+    next.disabled=true;
+  }
+}
+
+pat.addEventListener('input', atualizar);
+
+next.onclick = () => {
+  if(etapa < desafios.length - 1){
+    etapa++;
+    carregar();
+  } else {
+    // Mostra popup final que não pode ser fechada
+    document.getElementById("popupFinal").style.display = "flex";
+  }
+};
+
+/* ====== POPUP INICIAL ====== */
+const popup = document.getElementById('popup');
+const startBtn = document.getElementById('startGame');
+startBtn.onclick = () => {
+  popup.style.display = "none";
+  document.getElementById('game').style.display = "flex";
+  carregar();
+};
+</script>
+</html>
